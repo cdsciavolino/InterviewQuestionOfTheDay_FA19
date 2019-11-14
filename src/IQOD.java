@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 // Interview question of the day!
 class IQOD {
@@ -33,5 +34,83 @@ class IQOD {
             charCounts.put(c, charCounts.getOrDefault(c, 0) - 1);
         }
         return true;
+    }
+
+    /**
+     * Returns true iff the string `parens` contains a valid series of parentheses (),
+     * brackets [], and braces {}. False otherwise.
+     *
+     *  - Opening brackets must be closed by the same type of bracket
+     *  - Opening brackets must be closed in the correct order
+     *
+     * Leetcode Reference: https://leetcode.com/problems/valid-parentheses/
+     *
+     * Time: O(n) where n is the length of the input string `parens`
+     * Space: O(n) where n is the length of the input string `parens`
+     *
+     * @param parens string sequence of (, ), [, ], {, } characters
+     * @return true or false if the sequence is valid
+     */
+    static boolean isValidParentheses(String parens) {
+        // Create mapping from closing character -> opening character
+        Map<Character, Character> matches = new HashMap<Character, Character>();
+        matches.put(')', '(');
+        matches.put(']', '[');
+        matches.put('}', '{');
+
+        // Check for corresponding characters in the string
+        Stack<Character> seen = new Stack<Character>();
+        for (char c : parens.toCharArray()) {
+            if (!matches.containsKey(c)) seen.push(c);              // it's an opening character, push it to `seen`
+            else if (seen.isEmpty()) return false;                  // no matching opening character
+            else if (matches.get(c) != seen.pop()) return false;    // incorrect matching opening character
+        }
+
+        // check no unmatched opening character
+        return seen.isEmpty();
+    }
+
+    /**
+     * Given an absolute path for a file (Unix-style), simplify it to the
+     * shortest possible absolute path to the same directory.
+     *
+     * Formal Constraints & Definitions
+     *  - the `.` sequence means stay in the current directory
+     *  - the `..` sequence means move up a directory
+     *  - the `//` sequence can be interpreted to be `/./`
+     *  - the final return string must begin with a `/` character
+     *  - you cannot move up further than the root directory
+     *
+     * Leetcode Reference: https://leetcode.com/problems/simplify-path/
+     *
+     * Time: O(n) where n is the number of `/` separated operations in input `path`
+     * Space: O(n) where n is the number of `/` separated operations in input `path`
+     *
+     * @param path Absolute path to convert
+     * @return The shortest absolute path denoted by the input string `path`
+     */
+    static String simplifyFilePath(String path) {
+        if (path == null || "".equals(path)) return path;
+
+        // Break the original filepath into operations and simulate each operation
+        String[] pathOps = path.split("/");
+        Stack<String> curPath = new Stack<String>();
+        for (int i = 1; i < pathOps.length; i++) {
+            String op = pathOps[i];
+
+            // if `//` or `/./`, then do nothing
+            if (!op.equals("") && !op.equals(".")) {
+                if (op.equals("..")) {
+                    // `..` -> move up a directory if we're not in the root directory
+                    if (!curPath.isEmpty()) curPath.pop();
+                } else {
+                    // `desktop` -> move down to `op` directory
+                    curPath.push(op);
+                }
+            }
+        }
+
+        // Convert the stack into a `/` separated string and prepend first `/`
+        return "/" + String.join("/", curPath);
     }
 }
