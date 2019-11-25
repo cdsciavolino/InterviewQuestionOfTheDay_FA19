@@ -128,6 +128,13 @@ class IQOD {
      *      - Only 1 character can be changed at a time
      *      - Each transformed word must be in the given word list
      *
+     *  n = wordList.length
+     *  w = wordList[0].length()
+     *  c = alphabet.size()
+     *
+     *  Time: O(nwc) to preprocess neighborWords map
+     *  Space: O(n^2) when each word is a neighbor of every other word
+     *
      * @param start beginning word
      * @param end ending word
      * @param wordList list of available transformation words
@@ -188,5 +195,58 @@ class IQOD {
             this.word = word;
             this.numSteps = numSteps;
         }
+    }
+
+    /**
+     * Find the cost of the cheapest series of flights to get from `src` -> `dst` using at most
+     * `maxLayovers` intermediate flights given:
+     *      - `flights[][]` where flights[i] is in the form [from, to, flightPrice]
+     *      - `numCities` is the number of cities on the map
+     *      - `src` is the start city
+     *      - `dst` is the destination city
+     *      - `maxLayovers` is the maximum number of flights you can take to get from src -> dst
+     *
+     *  Leetcode reference: https://leetcode.com/problems/cheapest-flights-within-k-stops/
+     *
+     *  n = number of cities
+     *  l = maxLayovers
+     *  Time: O(n^l) to BFS through the n cities with l layovers maximum
+     *  Space: O(n^l) to store a queue of flights in the case all cities can go to all other cities
+     *
+     *  @return the cost of the cheapest flight sequence
+     */
+    static int cheapestFlightsWithLayovers(int numCities, int[][] flights, int src, int dst, int maxLayovers) {
+        // Preprocess `flights` into map of (from -> (to -> flightCost))
+        Map<Integer, Map<Integer, Integer>> srcDstPrice = new HashMap<Integer, Map<Integer, Integer>>();
+        for (int[] flight : flights) {
+            // flight = [ from, to, price ]
+            if (!srcDstPrice.containsKey(flight[0]))
+                srcDstPrice.put(flight[0], new HashMap<Integer, Integer>());
+            srcDstPrice.get(flight[0]).put(flight[1], flight[2]);
+        }
+
+        // Run BFS from `src` city to all other cities
+        // Each entry in the Queue is in the form [ curCity, numLayovers, srcToCityPrice ]
+        Queue<int[]> nextFlights = new LinkedList<int[]>();
+        nextFlights.add(new int[]{src, 0, 0});
+        int optCost = Integer.MAX_VALUE;
+        while (!nextFlights.isEmpty()) {
+            int[] curNode = nextFlights.poll();
+            Map<Integer, Integer> outFlights = srcDstPrice.getOrDefault(curNode[0], new HashMap<>());
+            for (Map.Entry<Integer, Integer> outFlight : outFlights.entrySet()) {
+                int neighbor = outFlight.getKey();
+                int totalCostToNeighbor = curNode[2] + outFlight.getValue();
+
+                // if we found a better path to `dst`, update optCost
+                if (neighbor == dst && optCost > totalCostToNeighbor)
+                    optCost = totalCostToNeighbor;
+
+                // if we're within the layover limit and haven't surpassed the best so far
+                if (curNode[1] < maxLayovers && totalCostToNeighbor < optCost)
+                    nextFlights.add(new int[]{neighbor, curNode[1] + 1, totalCostToNeighbor});
+            }
+        }
+
+        return optCost != Integer.MAX_VALUE ? optCost : -1;
     }
 }
