@@ -81,4 +81,24 @@ class IQODTest {
         assertEquals(3, IQOD.cheapestFlightsWithLayovers(numCities, flights, 0, 3, 2));
         assertEquals(6, IQOD.cheapestFlightsWithLayovers(numCities, flights, 0, 3, 1));
     }
+
+    @Test
+    void testLRUCache() {
+        IQOD.LRUCache cache = new IQOD.LRUCache(2);
+        cache.put(1, 1);
+        assertEquals(1, cache.get(1));
+        cache.put(2, 2);
+        assertEquals(1, cache.get(1));
+        assertEquals(2, cache.get(2));
+        cache.put(3, 3);
+        assertEquals(3, cache.get(3));
+        assertEquals(2, cache.get(2));
+        assertEquals(-1, cache.get(1));
+        cache.put(4, 4);
+        assertEquals(-1, cache.get(3));
+        assertEquals(2, cache.get(2));
+        assertEquals(4, cache.get(4));
+        cache.put(4, 5);
+        assertEquals(5, cache.get(4));
+    }
 }
